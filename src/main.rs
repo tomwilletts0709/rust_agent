@@ -1,6 +1,7 @@
+use std::path::{Path, PathBuf};
+
 use anyhow::{Context, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
 
 const ANTHROPIC_URL: &str = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION: &str = "2023-06-01";
@@ -144,10 +145,10 @@ async fn send(
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
     let api_key = std::env::var("ANTHROPIC_API_KEY").context("ANTHROPIC_API_KEY not set")?;
-    let user_question = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| "What edition does cargo.toml use?".to_string());
-
+    let user_question = std::env::args().skip(1).collect::<Vec<String>>().join(" ");
+    if user_question.trim().is_empty() {
+        bail!("please provide a question");
+    }
     let http = reqwest::Client::new();
     let tools = vec![read_file_definition()];
 
